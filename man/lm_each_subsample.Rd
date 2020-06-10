@@ -2,10 +2,12 @@
 % Please edit documentation in R/blblm.R
 \name{lm_each_subsample}
 \alias{lm_each_subsample}
-\title{compute the estimates}
+\title{lm_each_subsample
+compute the estimates}
 \usage{
 lm_each_subsample(formula, data, n, B)
 }
 \description{
+lm_each_subsample
 compute the estimates
 }

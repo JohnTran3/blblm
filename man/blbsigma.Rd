@@ -2,10 +2,13 @@
 % Please edit documentation in R/blblm.R
 \name{blbsigma}
 \alias{blbsigma}
-\title{compute sigma from fit}
+\title{blbsigma}
 \usage{
 blbsigma(fit)
 }
+\arguments{
+\item{fit}{compute sigma from fit}
+}
 \description{
-compute sigma from fit
+blbsigma
 }

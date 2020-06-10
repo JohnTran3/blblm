@@ -1,0 +1,133 @@
+---
+title: "blblm-vignette"
+output: rmarkdown::html_vignette
+author: "John Tran"
+package: "blblm"
+description: >
+  This vignette highlights the changes of the blblbm functions in this blblm packages.
+vignette: >
+  %\VignetteIndexEntry{blblm-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette is using linear regression of little bag of bootstrap which uses parallization and rcpp.
+
+# Overview
+1.  Relative to the original package, the base r lm function was replaced with a fastlm rcpp function.
+
+2. The blblm function can now read a list of files, so the user is allowed to choose the amount of data they want to use.
+
+3. The user is able to use parallelization based on the amount of cores they have.
+
+# Changing the lm1 function into rcpp.
+Originally, the function was using the base lm function from R. Even though it is very simple and useful, the based lm function was not as fast as the rcpp function. The rcpp function was clearly faster.
+
+lm2 is the original lm function from the package. While lm1 is the function with fastLm the rcpp function inside of it. The differences here is that the base lm function simplifies alot of work for us. 
+```{r}
+library(blblm)
+
+```
+
+```{r}
+blbsigma <- function(fit) {
+  p <- fit$rank
+  y <- fit$response
+  e <- fit$residuals - y
+  w <- fit$weights
+  sqrt(sum(w * (e^2)) / (sum(w) - p))
+}
+blbcoef <- function(fit) {
+  coef(fit)
+}
+
+lm2 <- function(formula, data, freqs) {
+  # drop the original closure of formula,
+  # otherwise the formula will pick a wront variable from the global scope.
+  environment(formula) <- environment()
+  fit <- lm(formula, data, weights = freqs)
+  list(coef = blbcoef(fit), sigma = blbsigma(fit))
+}
+
+
+lm1 <- function(formula, data, freqs) {
+  # drop the original closure of formula,
+  # otherwise the formula will pick a wront variable from the global scope.
+  environment(formula) <- environment()
+  x<-model.matrix(formula,data)
+  y<-model.response(model.frame(formula,data))
+  fit <- fastLm(x, y, w = freqs)
+  list(coef = blbcoef(fit), sigma = blbsigma(fit))
+}
+
+
+```
+
+```{r}
+library(microbenchmark)
+w <-rmultinom(1,10,rep(1,nrow(mtcars)))
+microbenchmark(lm2(mpg~hp,mtcars,w),lm1(mpg~hp,mtcars,w))
+
+```
+As we can see after running this benchmark, we can see that the lm1 function (the one with fastLm rcpp function) was signficantly faster than the base function.
+
+
+# Creating a function that allows the user to input a list of CSVs.
+
+```{r}
+
+blblm <- function(formula, data, m = 10, B = 5000,no_cores = 1,files = NULL) {
+  if(is.null(files)){
+    data_list <- split_data(data, m)
+  }else{
+    data_list <- list()
+    for(i in 1:length(files)){
+      name <- paste(i)
+      tmp <- read_csv(files[i])
+      data_list[[name]] <- tmp
+  }}
+  if(no_cores == 1){
+    estimates <- map(
+      data_list,
+      ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B))
+    }else{
+    plan(multicore,workers= no_cores)
+  #data_list <- split_data(data, m)
+    estimates <- future_map(
+    data_list,
+    ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B))}
+
+  res <- list(estimates = estimates, formula = formula)
+  class(res) <- "blblm"
+  invisible(res)
+}
+```
+
+Based on the code on top, I have added implementation for the user to add a list of csvs. It allows the user to lessen the load of the workers to minimize memory usage. The csvs are basically splitted data already.
+
+# Parallelization
+
+As the code prior, this allows the user to choose how much cores for the parallelization. They can use available cores to use how much cores they want to implement. There is also an option if they don't want to use it. This is only for the blblm function.
+
+
+# Other changes
+
+```{r}
+blbsigma <- function(fit) {
+  p <- fit$rank
+  y <- fit$response
+  e <- fit$residuals - y
+  w <- fit$weights
+  sqrt(sum(w * (e^2)) / (sum(w) - p))
+}
+```
+
+The blbsigma function had to be modified due to the fastLm function in rcpp. The fastLm function return rank, response, residuals, and weights.
+

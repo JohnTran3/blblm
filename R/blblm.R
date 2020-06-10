@@ -1,5 +1,8 @@
 #' @import purrr
 #' @import stats
+#' @import furrr
+#' @import RcppArmadillo
+#' @import tidyverse
 #' @importFrom magrittr %>%
 #' @details
 #' Linear Regression with Little Bag of Bootstraps
@@ -12,58 +15,89 @@ utils::globalVariables(c("."))
 
 
 #' @export
-blblm <- function(formula, data, m = 10, B = 5000) {
-  data_list <- split_data(data, m)
-  estimates <- map(
+#' @param formula
+#' @param data
+#' @param m
+#' @param B
+#' @param files
+#' @param no_cores
+blblm <- function(formula, data, m = 10, B = 5000,no_cores = 1,files = NULL) {
+  if(is.null(files)){
+    data_list <- split_data(data, m)
+  }else{
+    data_list <- list()
+    for(i in 1:length(files)){
+      name <- paste(i)
+      tmp <- read_csv(files[i])
+      data_list[[name]] <- tmp
+  }}
+  if(no_cores == 1){
+    estimates <- map(
+      data_list,
+      ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B))
+    }else{
+    plan(multicore,workers= no_cores)
+  #data_list <- split_data(data, m)
+    estimates <- future_map(
     data_list,
-    ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B))
+    ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B))}
+
   res <- list(estimates = estimates, formula = formula)
   class(res) <- "blblm"
   invisible(res)
 }
 
-
+#' @title split_data
 #' split data into m parts of approximated equal sizes
 split_data <- function(data, m) {
   idx <- sample.int(m, nrow(data), replace = TRUE)
   data %>% split(idx)
 }
 
-
+#'@title lm_each_subsample
 #' compute the estimates
 lm_each_subsample <- function(formula, data, n, B) {
   replicate(B, lm_each_boot(formula, data, n), simplify = FALSE)
 }
 
-
+#' @title lm_each_boot
+#' @param freqs list of numbers
 #' compute the regression estimates for a blb dataset
 lm_each_boot <- function(formula, data, n) {
   freqs <- rmultinom(1, n, rep(1, nrow(data)))
   lm1(formula, data, freqs)
 }
 
-
-#' estimate the regression estimates based on given the number of repetitions
+#' @title lm1
+#' @param formula
+#' @param data
+#' @param freqs
+#' #' estimate the regression estimates based on given the number of repetitions
 lm1 <- function(formula, data, freqs) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wront variable from the global scope.
   environment(formula) <- environment()
-  fit <- lm(formula, data, weights = freqs)
+  x<-model.matrix(formula,data)
+  y<-model.response(model.frame(formula,data))
+  fit <- fastLm(x, y, w = freqs)
   list(coef = blbcoef(fit), sigma = blbsigma(fit))
 }
-
-
+#'@export
+#'@title blbcoef
+#'@param fit
 #' compute the coefficients from fit
 blbcoef <- function(fit) {
   coef(fit)
 }
 
-
+#' @export
+#' @title blbsigma
+#' @param fit
 #' compute sigma from fit
 blbsigma <- function(fit) {
   p <- fit$rank
-  y <- model.extract(fit$model, "response")
-  e <- fitted(fit) - y
+  y <- fit$response
+  e <- fit$residuals - y
   w <- fit$weights
   sqrt(sum(w * (e^2)) / (sum(w) - p))
 }

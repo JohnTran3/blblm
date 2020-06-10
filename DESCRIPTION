@@ -6,13 +6,23 @@ Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests: 
-    testthat (>= 2.1.0)
+    testthat (>= 2.1.0),
+    knitr,
+    rmarkdown
 Imports: 
     purrr,
-    magrittr
+    magrittr,
+    Rcpp,
+    RcppArmadillo,
+    furrr,
+    tidyverse
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo
+VignetteBuilder: knitr

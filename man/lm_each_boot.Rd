@@ -2,10 +2,14 @@
 % Please edit documentation in R/blblm.R
 \name{lm_each_boot}
 \alias{lm_each_boot}
-\title{compute the regression estimates for a blb dataset}
+\title{lm_each_boot}
 \usage{
 lm_each_boot(formula, data, n)
 }
+\arguments{
+\item{freqs}{list of numbers
+compute the regression estimates for a blb dataset}
+}
 \description{
-compute the regression estimates for a blb dataset
+lm_each_boot
 }
