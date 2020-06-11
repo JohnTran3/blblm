@@ -7,7 +7,11 @@
 blbcoef(fit)
 }
 \arguments{
-\item{fit}{compute the coefficients from fit}
+\item{fit}{model}
+}
+\value{
+coef
+compute the coefficients from fit
 }
 \description{
 blbcoef

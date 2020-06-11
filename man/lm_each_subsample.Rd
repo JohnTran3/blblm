@@ -2,12 +2,20 @@
 % Please edit documentation in R/blblm.R
 \name{lm_each_subsample}
 \alias{lm_each_subsample}
-\title{lm_each_subsample
-compute the estimates}
+\title{lm_each_subsample}
 \usage{
 lm_each_subsample(formula, data, n, B)
 }
+\arguments{
+\item{formula}{linear regression model}
+
+\item{data}{dataset}
+
+\item{n}{number of n}
+
+\item{B}{bootstrap
+compute the estimates}
+}
 \description{
 lm_each_subsample
-compute the estimates
 }

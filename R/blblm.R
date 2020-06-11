@@ -3,6 +3,7 @@
 #' @import furrr
 #' @import RcppArmadillo
 #' @import tidyverse
+#' @import utils
 #' @importFrom magrittr %>%
 #' @details
 #' Linear Regression with Little Bag of Bootstraps
@@ -15,12 +16,12 @@ utils::globalVariables(c("."))
 
 
 #' @export
-#' @param formula
-#' @param data
-#' @param m
-#' @param B
-#' @param files
-#' @param no_cores
+#' @param formula formula for the linear regression
+#' @param data dataset to input
+#' @param m amount of splits
+#' @param B bootstraps
+#' @param files files list
+#' @param no_cores number of cores
 blblm <- function(formula, data, m = 10, B = 5000,no_cores = 1,files = NULL) {
   if(is.null(files)){
     data_list <- split_data(data, m)
@@ -48,6 +49,8 @@ blblm <- function(formula, data, m = 10, B = 5000,no_cores = 1,files = NULL) {
 }
 
 #' @title split_data
+#' @param data dataset
+#' @param m index
 #' split data into m parts of approximated equal sizes
 split_data <- function(data, m) {
   idx <- sample.int(m, nrow(data), replace = TRUE)
@@ -55,13 +58,20 @@ split_data <- function(data, m) {
 }
 
 #'@title lm_each_subsample
+#'@param formula linear regression model
+#'@param data dataset
+#'@param n number of n
+#'@param B bootstrap
 #' compute the estimates
 lm_each_subsample <- function(formula, data, n, B) {
   replicate(B, lm_each_boot(formula, data, n), simplify = FALSE)
 }
 
 #' @title lm_each_boot
-#' @param freqs list of numbers
+#' @param formula  linear model
+#' @param data dataset
+#' @param n length of freqs
+#'
 #' compute the regression estimates for a blb dataset
 lm_each_boot <- function(formula, data, n) {
   freqs <- rmultinom(1, n, rep(1, nrow(data)))
@@ -69,10 +79,11 @@ lm_each_boot <- function(formula, data, n) {
 }
 
 #' @title lm1
-#' @param formula
-#' @param data
-#' @param freqs
-#' #' estimate the regression estimates based on given the number of repetitions
+#' @param formula formula
+#' @param data dataset
+#' @param freqs weights
+#' @return returns list of coef and sigma
+#' estimate the regression estimates based on given the number of repetitions
 lm1 <- function(formula, data, freqs) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wront variable from the global scope.
@@ -84,7 +95,8 @@ lm1 <- function(formula, data, freqs) {
 }
 #'@export
 #'@title blbcoef
-#'@param fit
+#'@param fit model
+#'@return coef
 #' compute the coefficients from fit
 blbcoef <- function(fit) {
   coef(fit)
@@ -92,7 +104,8 @@ blbcoef <- function(fit) {
 
 #' @export
 #' @title blbsigma
-#' @param fit
+#' @param fit model
+#' @return
 #' compute sigma from fit
 blbsigma <- function(fit) {
   p <- fit$rank

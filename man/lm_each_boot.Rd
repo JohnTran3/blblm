@@ -7,7 +7,12 @@
 lm_each_boot(formula, data, n)
 }
 \arguments{
-\item{freqs}{list of numbers
+\item{formula}{linear model}
+
+\item{data}{dataset}
+
+\item{n}{length of freqs
+
 compute the regression estimates for a blb dataset}
 }
 \description{

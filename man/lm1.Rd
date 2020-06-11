@@ -7,7 +7,15 @@
 lm1(formula, data, freqs)
 }
 \arguments{
-\item{freqs}{#' estimate the regression estimates based on given the number of repetitions}
+\item{formula}{formula}
+
+\item{data}{dataset}
+
+\item{freqs}{weights}
+}
+\value{
+returns list of coef and sigma
+estimate the regression estimates based on given the number of repetitions
 }
 \description{
 lm1

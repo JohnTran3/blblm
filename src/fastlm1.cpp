@@ -2,16 +2,13 @@
 //[[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 using namespace arma;
-//'@title fastLm
-//'
-//'@param X matric
+//'@title this is the title
+//' Fastlm function in rcpp
+//'@param X matrix
 //'@param y vector
 //'@param w vector
-//'
 //'@export fastLm
-//'@return model coefficients
-//'@examples
-//'fastLm(X,y,w)
+
 
 //[[Rcpp::export]]
 List fastLm(const arma::mat& X, const arma::colvec& y, const arma::vec& w){

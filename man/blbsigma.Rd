@@ -7,7 +7,10 @@
 blbsigma(fit)
 }
 \arguments{
-\item{fit}{compute sigma from fit}
+\item{fit}{model}
+}
+\value{
+compute sigma from fit
 }
 \description{
 blbsigma
